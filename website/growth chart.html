@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power & Merit Growth Analytics — NMC Kingdom 820</title>
+    <style>
+        /* ==========================================================================
+           1. COLOR SYSTEM & DESIGN TOKENS
+           ========================================================================== */
+        :root {
+            --bg-base: #080a0f;
+            --bg-surface: #10141e;
+            --bg-surface-hover: #161b28;
+            --bg-surface-active: #1c2234;
+            --border-subtle: #1e2638;
+            --border-strong: #2d374e;
+
+            /* Accents */
+            --accent-primary: #6366f1; /* Electric Indigo */
+            --accent-cyan: #06b6d4;    /* Power Metric (Cyan) */
+            --accent-gold: #f59e0b;    /* Merit Metric (Amber) */
+            --accent-emerald: #10b981; /* Positive Delta */
+            --accent-rose: #f43f5e;    /* Negative Delta */
+
+            /* Typography */
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --text-dim: #4b5563;
+
+            /* Layout */
+            --max-width: 1200px;
+            --radius-card: 12px;
+            --radius-btn: 8px;
+            --transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* ==========================================================================
+           2. BASE RESET & TYPOGRAPHY
+           ========================================================================== */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1000px;
+            height: 400px;
+            background: radial-gradient(ellipse at top, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ==========================================================================
+           3. HEADER NAVIGATION
+           ========================================================================== */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: rgba(8, 10, 15, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .nav-container {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .brand-badge {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--accent-primary);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            font-family: ui-monospace, SFMono-Regular, monospace;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 6px;
+        }
+
+        .brand-title {
+            color: var(--text-main);
+            font-weight: 700;
+            font-size: 18px;
+            letter-spacing: -0.3px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 6px 12px;
+            border-radius: var(--radius-btn);
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover {
+            color: var(--text-main);
+            background: var(--bg-surface-hover);
+        }
+
+        .nav-links a.active {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-subtle);
+        }
+
+        .utc-clock {
+            font-family: ui-monospace, SFMono-Regular, monospace;
+            font-size: 12px;
+            color: var(--accent-cyan);
+            background: rgba(6, 182, 212, 0.08);
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            padding: 4px 10px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .utc-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--accent-cyan);
+            border-radius: 50%;
+            box-shadow: 0 0 6px var(--accent-cyan);
+        }
+
+        /* ==========================================================================
+           4. MAIN CONTENT
+           ========================================================================== */
+        main {
+            flex: 1;
+            max-width: var(--max-width);
+            width: 100%;
+            margin: 0 auto;
+            padding: 40px 24px 60px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-title-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .module-badge {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--accent-emerald);
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+
+        .page-desc {
+            color: var(--text-muted);
+            font-size: 14.5px;
+        }
+
+        /* Metric Summary Cards */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .metric-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-card);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: 700;
+            font-family: ui-monospace, SFMono-Regular, monospace;
+            color: var(--text-main);
+        }
+
+        .metric-subtext {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Control Card */
+        .controls-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-card);
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .select-input {
+            background: var(--bg-base);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-btn);
+            color: var(--text-main);
+            font-size: 13.5px;
+            padding: 8px 12px;
+            outline: none;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .select-input:focus {
+            border-color: var(--accent-primary);
+        }
+
+        .legend-group {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 12.5px;
+            font-weight: 600;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        /* Chart Area Card */
+        .chart-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-card);
+            padding: 24px;
+            margin-bottom: 32px;
+            position: relative;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 340px;
+            position: relative;
+        }
+
+        svg.timeline-svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        /* Log Table Section */
+        .table-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-card);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border-subtle);
+            font-size: 15px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        thead {
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        th {
+            padding: 12px 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid var(--border-subtle);
+            transition: var(--transition);
+        }
+
+        tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background: var(--bg-surface-hover);
+        }
+
+        td {
+            padding: 12px 20px;
+            color: var(--text-main);
+        }
+
+        .num-cell {
+            font-family: ui-monospace, SFMono-Regular, monospace;
+            font-weight: 600;
+        }
+
+        /* ==========================================================================
+           5. FOOTER
+           ========================================================================== */
+        footer {
+            border-top: 1px solid var(--border-subtle);
+            background: var(--bg-surface);
+            padding: 24px;
+            margin-top: auto;
+        }
+
+        .footer-content {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            color: var(--text-muted);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 16px;
+        }
+
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer-links a:hover {
+            color: var(--text-main);
+        }
+
+        @media (max-width: 768px) {
+            .controls-card {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .table-card {
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header>
+        <div class="nav-container">
+            <a href="../home.html" class="brand">
+                <span class="brand-badge">NMC</span>
+                <span class="brand-title">Alliance Hub</span>
+            </a>
+
+            <nav class="nav-links">
+                <a href="../home.html">Home</a>
+                <a href="../merits/merits.html">Merits</a>
+                <a href="../kpi/kpi.html">KPI</a>
+                <a href="../spider chart/spider chart.html">Spider</a>
+                <a href="growth chart.html" class="active">Growth</a>
+                <a href="../war profit loss/war profit loss.html">War P&amp;L</a>
+            </nav>
+
+            <div class="utc-clock">
+                <span class="utc-dot"></span>
+                <span id="utcTime">UTC 00:00</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main>
+        <div class="page-header">
+            <div class="page-title-group">
+                <h1 class="page-title">Power &amp; Merit Growth Analytics</h1>
+                <span class="module-badge">Season Timeline</span>
+            </div>
+            <p class="page-desc">Track historical progression, weekly growth surges, and merit accumulation timelines across KvK milestones.</p>
+        </div>
+
+        <!-- Metric Overview -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <span class="metric-label">Peak Kingdom Power</span>
+                <span class="metric-value" style="color: var(--accent-cyan);" id="metricPeakPower">98.0M</span>
+                <span class="metric-subtext" id="metricPowerGain">+63.0M Growth from S1</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-label">Accumulated Merits</span>
+                <span class="metric-value" style="color: var(--accent-gold);" id="metricMerits">14.2M</span>
+                <span class="metric-subtext">Alliance Record Holder</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-label">Avg Weekly Growth</span>
+                <span class="metric-value" style="color: var(--accent-emerald);">+9.0M</span>
+                <span class="metric-subtext">Consistent Escalation</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-label">Current Season Status</span>
+                <span class="metric-value">Phase 4</span>
+                <span class="metric-subtext">Pass 3 Warfare Open</span>
+            </div>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="controls-card">
+            <div class="filter-group">
+                <label for="memberSelect" style="font-size: 13px; font-weight: 600; color: var(--text-muted);">Member:</label>
+                <select id="memberSelect" class="select-input">
+                    <option value="Tradgick">Tradgick (King)</option>
+                    <option value="Ares">Ares (Rally Captain)</option>
+                    <option value="Valkyrie">Valkyrie (Field Leader)</option>
+                    <option value="ShadowK">ShadowK (Garrison Anchor)</option>
+                    <option value="ALLIANCE_AVG">Kingdom Average</option>
+                </select>
+
+                <label for="viewMode" style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin-left: 12px;">Display:</label>
+                <select id="viewMode" class="select-input">
+                    <option value="BOTH">Dual Axis (Power &amp; Merits)</option>
+                    <option value="POWER">Power Progression Only</option>
+                    <option value="MERITS">Merit Velocity Only</option>
+                </select>
+            </div>
+
+            <div class="legend-group">
+                <div class="legend-item" id="legPower">
+                    <span class="legend-dot" style="background: var(--accent-cyan);"></span>
+                    <span style="color: var(--text-main);">Power (M)</span>
+                </div>
+                <div class="legend-item" id="legMerits">
+                    <span class="legend-dot" style="background: var(--accent-gold);"></span>
+                    <span style="color: var(--text-main);">Merits (M)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vector SVG Chart Container -->
+        <div class="chart-card">
+            <div class="chart-container">
+                <svg class="timeline-svg" id="timelineSvg" viewBox="0 0 1000 320" preserveAspectRatio="none">
+                    <!-- Dynamic SVG Line Chart -->
+                </svg>
+            </div>
+        </div>
+
+        <!-- Historical Breakdown Log -->
+        <div class="table-card">
+            <div class="table-header">
+                <span>Weekly Milestone Log</span>
+                <span style="font-size: 12px; color: var(--text-muted); font-weight: 400;">Season 1 Progress</span>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Timeline Week</th>
+                        <th>Kingdom Phase</th>
+                        <th>Power Score</th>
+                        <th>Merit Accumulation</th>
+                        <th>Weekly Net Delta</th>
+                    </tr>
+                </thead>
+                <tbody id="logTableBody">
+                    <!-- Rendered by JS -->
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div><strong>No Mercy Alliance Hub</strong> — Kingdom 820</div>
+            <div class="footer-links">
+                <a href="../home.html">Home</a>
+                <a href="../merits/merits.html">Merits</a>
+                <a href="../kpi/kpi.html">KPI</a>
+                <a href="../spider chart/spider chart.html">Spider</a>
+                <a href="growth chart.html">Growth</a>
+                <a href="../war profit loss/war profit loss.html">War P&amp;L</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Script to Render Dynamic SVG Growth Chart -->
+    <script>
+        const weeks = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5", "Week 6", "Week 7", "Week 8"];
+        const phases = ["Zone 1 Spawn", "Pass 1 Open", "Zone 2 Expansion", "Pass 2 War", "Zone 3 Push", "Pass 3 Siege", "Dragon Lair", "King Crowned"];
+
+        const growthData = {
+            "Tradgick": {
+                power: [35, 42, 55, 68, 75, 84, 92, 98],
+                merits: [0.5, 1.8, 3.5, 6.2, 9.0, 11.5, 13.2, 14.2]
+            },
+            "Ares": {
+                power: [32, 40, 50, 60, 68, 76, 82, 88],
+                merits: [0.4, 1.5, 3.0, 5.2, 7.8, 9.5, 10.8, 11.8]
+            },
+            "Valkyrie": {
+                power: [28, 35, 45, 52, 60, 68, 74, 80],
+                merits: [0.3, 1.2, 2.8, 4.8, 7.0, 8.5, 9.8, 10.5]
+            },
+            "ShadowK": {
+                power: [30, 38, 48, 55, 62, 70, 76, 82],
+                merits: [0.2, 1.0, 2.2, 4.0, 5.8, 7.2, 8.1, 8.8]
+            },
+            "ALLIANCE_AVG": {
+                power: [20, 26, 34, 42, 48, 55, 60, 65],
+                merits: [0.1, 0.6, 1.5, 3.0, 4.5, 5.8, 6.8, 7.5]
+            }
+        };
+
+        function renderChart() {
+            const member = document.getElementById('memberSelect').value;
+            const mode = document.getElementById('viewMode').value;
+            const svg = document.getElementById('timelineSvg');
+
+            const pData = growthData[member].power;
+            const mData = growthData[member].merits;
+
+            // Update top metrics
+            const latestPower = pData[pData.length - 1];
+            const startPower = pData[0];
+            const latestMerits = mData[mData.length - 1];
+
+            document.getElementById('metricPeakPower').textContent = `${latestPower.toFixed(1)}M`;
+            document.getElementById('metricPowerGain').textContent = `+${(latestPower - startPower).toFixed(1)}M Growth from S1`;
+            document.getElementById('metricMerits').textContent = `${latestMerits.toFixed(1)}M`;
+
+            // Adjust Legend Visibility
+            document.getElementById('legPower').style.display = (mode === 'MERITS') ? 'none' : 'flex';
+            document.getElementById('legMerits').style.display = (mode === 'POWER') ? 'none' : 'flex';
+
+            svg.innerHTML = '';
+
+            const W = 1000;
+            const H = 320;
+            const padL = 60;
+            const padR = 60;
+            const padT = 30;
+            const padB = 40;
+
+            const graphW = W - padL - padR;
+            const graphH = H - padT - padB;
+
+            // Grid Horizontal Lines
+            const gridRows = 4;
+            for (let i = 0; i <= gridRows; i++) {
+                const y = padT + (graphH / gridRows) * i;
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", padL);
+                line.setAttribute("y1", y);
+                line.setAttribute("x2", W - padR);
+                line.setAttribute("y2", y);
+                line.setAttribute("stroke", "rgba(255, 255, 255, 0.05)");
+                line.setAttribute("stroke-width", "1");
+                svg.appendChild(line);
+            }
+
+            // X Axis Labels
+            weeks.forEach((w, idx) => {
+                const x = padL + (graphW / (weeks.length - 1)) * idx;
+                
+                // Vertical guide
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", x);
+                line.setAttribute("y1", padT);
+                line.setAttribute("x2", x);
+                line.setAttribute("y2", H - padB);
+                line.setAttribute("stroke", "rgba(255, 255, 255, 0.05)");
+                line.setAttribute("stroke-dasharray", "3,3");
+                svg.appendChild(line);
+
+                // Text
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", x);
+                text.setAttribute("y", H - 12);
+                text.setAttribute("fill", "#9ca3af");
+                text.setAttribute("font-size", "11");
+                text.setAttribute("font-weight", "600");
+                text.setAttribute("text-anchor", "middle");
+                text.textContent = w;
+                svg.appendChild(text);
+            });
+
+            // Map Data Points to Coordinates
+            const maxPower = 100; // 0 to 100M
+            const maxMerits = 16;  // 0 to 16M
+
+            function getPowerCoords(val, idx) {
+                const x = padL + (graphW / (weeks.length - 1)) * idx;
+                const y = padT + graphH - (val / maxPower) * graphH;
+                return { x, y };
+            }
+
+            function getMeritCoords(val, idx) {
+                const x = padL + (graphW / (weeks.length - 1)) * idx;
+                const y = padT + graphH - (val / maxMerits) * graphH;
+                return { x, y };
+            }
+
+            // Draw Power Line & Area
+            if (mode === 'BOTH' || mode === 'POWER') {
+                const powerPoints = pData.map((val, i) => getPowerCoords(val, i));
+                
+                // Area Path
+                let areaD = `M ${powerPoints[0].x} ${padT + graphH}`;
+                powerPoints.forEach(pt => areaD += ` L ${pt.x} ${pt.y}`);
+                areaD += ` L ${powerPoints[powerPoints.length - 1].x} ${padT + graphH} Z`;
+
+                const areaPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                areaPath.setAttribute("d", areaD);
+                areaPath.setAttribute("fill", "rgba(6, 182, 212, 0.1)");
+                svg.appendChild(areaPath);
+
+                // Line Path
+                let lineD = `M ${powerPoints[0].x} ${powerPoints[0].y}`;
+                for (let i = 1; i < powerPoints.length; i++) {
+                    lineD += ` L ${powerPoints[i].x} ${powerPoints[i].y}`;
+                }
+                const linePath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                linePath.setAttribute("d", lineD);
+                linePath.setAttribute("fill", "none");
+                linePath.setAttribute("stroke", "var(--accent-cyan)");
+                linePath.setAttribute("stroke-width", "3");
+                svg.appendChild(linePath);
+
+                // Dots
+                powerPoints.forEach(pt => {
+                    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    circle.setAttribute("cx", pt.x);
+                    circle.setAttribute("cy", pt.y);
+                    circle.setAttribute("r", "4");
+                    circle.setAttribute("fill", "var(--accent-cyan)");
+                    circle.setAttribute("stroke", "#080a0f");
+                    circle.setAttribute("stroke-width", "1.5");
+                    svg.appendChild(circle);
+                });
+            }
+
+            // Draw Merit Line & Area
+            if (mode === 'BOTH' || mode === 'MERITS') {
+                const meritPoints = mData.map((val, i) => getMeritCoords(val, i));
+
+                // Line Path
+                let lineD = `M ${meritPoints[0].x} ${meritPoints[0].y}`;
+                for (let i = 1; i < meritPoints.length; i++) {
+                    lineD += ` L ${meritPoints[i].x} ${meritPoints[i].y}`;
+                }
+                const linePath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                linePath.setAttribute("d", lineD);
+                linePath.setAttribute("fill", "none");
+                linePath.setAttribute("stroke", "var(--accent-gold)");
+                linePath.setAttribute("stroke-width", "2.5");
+                linePath.setAttribute("stroke-dasharray", mode === 'BOTH' ? "4,4" : "none");
+                svg.appendChild(linePath);
+
+                // Dots
+                meritPoints.forEach(pt => {
+                    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    circle.setAttribute("cx", pt.x);
+                    circle.setAttribute("cy", pt.y);
+                    circle.setAttribute("r", "4");
+                    circle.setAttribute("fill", "var(--accent-gold)");
+                    circle.setAttribute("stroke", "#080a0f");
+                    circle.setAttribute("stroke-width", "1.5");
+                    svg.appendChild(circle);
+                });
+            }
+
+            renderLogTable(pData, mData);
+        }
+
+        function renderLogTable(pData, mData) {
+            const tbody = document.getElementById('logTableBody');
+            tbody.innerHTML = '';
+
+            weeks.forEach((w, i) => {
+                const power = pData[i];
+                const merits = mData[i];
+                const prevPower = i > 0 ? pData[i - 1] : power;
+                const deltaPower = power - prevPower;
+
+                const deltaText = deltaPower >= 0
+                    ? `<span style="color: var(--accent-emerald); font-weight:700;">+${deltaPower.toFixed(1)}M</span>`
+                    : `<span style="color: var(--accent-rose); font-weight:700;">${deltaPower.toFixed(1)}M</span>`;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-weight: 600;">${w}</td>
+                    <td style="color: var(--text-muted);">${phases[i]}</td>
+                    <td class="num-cell" style="color: var(--accent-cyan);">${power.toFixed(1)}M</td>
+                    <td class="num-cell" style="color: var(--accent-gold);">${merits.toFixed(1)}M</td>
+                    <td class="num-cell">${deltaText}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Live Clock
+        function updateClock() {
+            const now = new Date();
+            const h = String(now.getUTCHours()).padStart(2, '0');
+            const m = String(now.getUTCMinutes()).padStart(2, '0');
+            document.getElementById('utcTime').textContent = `UTC ${h}:${m}`;
+        }
+        updateClock();
+        setInterval(updateClock, 10000);
+
+        // Listeners
+        document.getElementById('memberSelect').addEventListener('change', renderChart);
+        document.getElementById('viewMode').addEventListener('change', renderChart);
+
+        renderChart();
+    </script>
+</body>
+</html>
