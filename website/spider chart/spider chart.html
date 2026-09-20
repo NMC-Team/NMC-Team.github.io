@@ -1,0 +1,1625 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NMC Member Performance</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+    darkMode: 'class'
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root {
+    --bg: #0b0f19;
+    --panel: #111827;
+    --panel2: #0f172a;
+    --border: rgba(55, 65, 81, .55);
+    --accent: #facc15;
+}
+
+* {
+    box-sizing: border-box;
+    scrollbar-width: thin;
+    scrollbar-color: #374151 transparent;
+}
+
+html, body {
+    margin: 0;
+    min-height: 100%;
+}
+
+body {
+    min-height: 100vh;
+    background: var(--bg);
+    color: #f9fafb;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.18);
+}
+
+.top-players-panel {
+    margin-top: 12px;
+    overflow: hidden;
+}
+
+.top-players-scroll {
+    overflow-x: auto;
+}
+
+.top-players-table {
+    width: 100%;
+    min-width: 760px;
+    border-collapse: collapse;
+}
+
+.top-players-table th,
+.top-players-table td {
+    border-bottom: 1px solid rgba(55, 65, 81, .42);
+    padding: 9px 10px;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.top-players-table th {
+    background: rgba(15, 23, 42, .75);
+    color: #9ca3af;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+}
+
+.top-players-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.top-category {
+    width: 150px;
+    color: #f3f4f6;
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.top-player-cell {
+    min-width: 190px;
+}
+
+.top-player {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.top-rank {
+    width: 22px;
+    min-width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    background: rgba(255, 244, 168, .08);
+    color: #fff4a8;
+    font: 700 9px ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.top-player-info {
+    min-width: 0;
+}
+
+.top-player-name {
+    color: #e5e7eb;
+    font-size: 10px;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.top-player-value {
+    margin-top: 1px;
+    color: #fff4a8;
+    font: 600 9px ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.top-empty {
+    color: #6b7280;
+    font-size: 10px;
+}
+
+@media (max-width: 700px) {
+    .top-players-table {
+        min-width: 700px;
+    }
+}
+
+.radar-layout {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    align-items: stretch;
+}
+
+.player-list-panel {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    border-right: 1px solid var(--border);
+}
+
+.player-list-viewport {
+    height: 350px;
+    flex: 0 0 350px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+    min-height: 0;
+}
+
+.player-list-body {
+    position: relative;
+    width: 100%;
+}
+
+.player-row {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 10px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(55,65,81,.38);
+    transition: background-color .12s ease;
+}
+
+.player-row:hover {
+    background: #1f2937;
+}
+
+.player-row.selected {
+    background: #1f2937;
+    box-shadow: inset 2px 0 0 #facc15;
+}
+
+.player-index {
+    width: 30px;
+    min-width: 30px;
+    text-align: center;
+    color: #6b7280;
+    font: 10px ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.player-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #e5e7eb;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.player-id {
+    color: #6b7280;
+    font: 9px ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.right-content {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(300px, 1fr) minmax(300px, 1fr);
+    align-items: stretch;
+    min-height: 350px;
+}
+
+.radar-wrap {
+    height: 350px;
+    min-width: 0;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.radar-canvas-wrap {
+    position: relative;
+    width: 350px;
+    height: 350px;
+    max-width: 94%;
+    max-height: 94%;
+}
+
+.radar-empty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 30px;
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.info-panel {
+    min-width: 0;
+    height: 350px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.selected-title {
+    margin-bottom: 8px;
+    padding: 0 2px;
+}
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.stat-card {
+    background: var(--panel2);
+    border: 1px solid rgba(75,85,99,.65);
+    border-radius: 10px;
+    padding: 9px 10px;
+    min-width: 0;
+}
+
+.stat-label {
+    color: #9ca3af;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.stat-value {
+    margin-top: 2px;
+    color: #f9fafb;
+    font: 700 12px ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.stat-ratio {
+    margin-top: 2px;
+    color: #facc15;
+    font: 600 9px ui-monospace, SFMono-Regular, Menlo, monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@media (max-width: 1050px) {
+    .right-content {
+        grid-template-columns: minmax(0, 1fr) minmax(250px, .9fr);
+    }
+
+    .stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .radar-canvas-wrap {
+        width: 315px;
+        height: 315px;
+    }
+}
+
+@media (max-width: 900px) {
+    .radar-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .player-list-panel {
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .player-list-viewport {
+        height: 350px;
+        flex-basis: 350px;
+    }
+
+    .right-content {
+        grid-template-columns: 1fr;
+        min-height: 0;
+    }
+
+    .radar-wrap {
+        height: 350px;
+    }
+
+    .info-panel {
+        height: auto;
+        min-height: 0;
+        padding: 12px;
+    }
+}
+
+@media (max-width: 560px) {
+    .player-list-viewport {
+        height: 320px;
+        flex-basis: 320px;
+    }
+
+    .radar-wrap {
+        height: 320px;
+    }
+
+    .radar-canvas-wrap {
+        width: 305px;
+        height: 305px;
+    }
+
+    .stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+</style>
+</head>
+
+<body class="pb-12">
+
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+
+    <header class="mt-4 rounded-xl bg-gray-900 border border-gray-800 p-5 shadow-lg">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
+
+            <div>
+                <h1 class="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
+                    No Mercy
+                </h1>
+                <p class="text-indigo-400 font-medium text-xs mt-1">
+                    Spider chart
+                </p>
+            </div>
+
+            <div class="flex items-center justify-center gap-2 flex-wrap">
+                <div class="bg-gray-800/80 border border-gray-700 rounded-lg px-3 py-2 text-center min-w-[82px]">
+                    <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Latest Data</div>
+                    <div id="latestDateText" class="text-[11px] font-mono font-bold text-indigo-400">Loading...</div>
+                </div>
+
+                <div class="bg-gray-800/80 border border-gray-700 rounded-lg px-3 py-2 text-center min-w-[72px]">
+                    <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Members</div>
+                    <div id="members" class="text-[11px] font-extrabold text-indigo-400">0</div>
+                </div>
+
+                <div class="bg-gray-800/80 border border-gray-700 rounded-lg px-3 py-2 text-center min-w-[100px]">
+                    <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Total Merits</div>
+                    <div id="totalContribution" class="text-[11px] font-extrabold text-indigo-400">0</div>
+                </div>
+            </div>
+
+        </div>
+    </header>
+
+    <div class="mt-3 panel overflow-hidden">
+        <div class="px-4 py-3 border-b border-gray-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <div class="text-right">
+                <div id="selectedPlayerName" class="text-xs font-bold text-yellow-400">
+                    None
+                </div>
+            </div>
+        </div>
+
+        <div class="radar-layout">
+            <div class="player-list-panel">
+                <div class="px-3 py-2 border-b border-gray-800">
+                    <div class="relative">
+                        <input
+                            type="text"
+                            id="searchInput"
+                            placeholder="Search by name or ID..."
+                            aria-label="Search by player name or ID"
+                            class="w-full bg-gray-900 border border-gray-800 rounded-lg py-1.5 pl-8 pr-3 text-xs text-gray-100 placeholder-gray-500 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition-colors"
+                        >
+
+                        <svg
+                            class="w-3.5 h-3.5 absolute left-2.5 top-2 text-gray-500 pointer-events-none"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                            ></path>
+                        </svg>
+                    </div>
+                </div>
+
+                <div id="playerListViewport" class="player-list-viewport">
+                    <div id="playerListBody" class="player-list-body"></div>
+                </div>
+            </div>
+
+            <div class="right-content">
+                <div id="radarWrap" class="radar-wrap">
+                    <div id="radarEmpty" class="radar-empty">
+                        Loading latest data...
+                    </div>
+
+                    <div id="radarCanvasWrap" class="radar-canvas-wrap hidden">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                </div>
+
+                <div id="selectedStats" class="info-panel hidden">
+                    <div class="selected-title">
+                        <div class="text-[9px] text-gray-500 font-bold uppercase tracking-wider">
+                            Player Information
+                        </div>
+                    </div>
+
+                    <div id="statGrid" class="stat-grid"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel top-players-panel">
+        <div class="px-4 py-3 border-b border-gray-800 flex items-center justify-between gap-3">
+            <div>
+                <div class="text-sm font-bold text-gray-100">
+                    Top Players
+                </div>
+            </div>
+        </div>
+
+        <div class="top-players-scroll">
+            <table class="top-players-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Top 1</th>
+                        <th>Top 2</th>
+                        <th>Top 3</th>
+                    </tr>
+                </thead>
+
+                <tbody id="topPlayersBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+
+const PLAYER_ROW_HEIGHT = 38;
+const VIRTUAL_BUFFER = 5;
+
+const RADAR_MAX = 200;
+
+let availableDates = [];
+let rawDateMap = {};
+
+let latestData = null;
+let allDailyData = {};
+
+let players = [];
+let filteredPlayers = [];
+
+let selectedPlayerId = null;
+
+let radarChart = null;
+
+let listAnimationFrame = null;
+
+function normalizeDate(value) {
+    if (!value) return "";
+
+    let d = String(value)
+        .replace(/\.json$/i, "")
+        .trim();
+
+    if (d.includes("/")) {
+        const parts = d.split("/");
+
+        if (parts.length === 3) {
+            return `${parts[0].padStart(2, "0")}-${parts[1].padStart(2, "0")}-${parts[2]}`;
+        }
+    }
+
+    if (d.includes("-")) {
+        const parts = d.split("-");
+
+        if (parts.length === 3) {
+            
+            if (parts[0].length === 2) {
+                return `${parts[0].padStart(2, "0")}-${parts[1].padStart(2, "0")}-${parts[2]}`;
+            }
+
+            if (parts[0].length === 4) {
+                return `${parts[2].padStart(2, "0")}-${parts[1].padStart(2, "0")}-${parts[0]}`;
+            }
+        }
+    }
+
+    return d;
+}
+
+function dateObject(date) {
+    const [day, month, year] = date.split("-").map(Number);
+    return new Date(year, month - 1, day);
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+function formatNumber(value) {
+    const n = Number(value);
+
+    if (!Number.isFinite(n)) {
+        return "0";
+    }
+
+    return n.toLocaleString();
+}
+
+function formatPercent(value) {
+    const n = Number(value);
+
+    if (!Number.isFinite(n)) {
+        return "0.0%";
+    }
+
+    return `${n.toFixed(1)}%`;
+}
+
+
+function normalizePlayer(raw) {
+    const id = String(raw.role_id ?? raw.id ?? '').trim();
+    const name = String(raw.role_name ?? raw.name ?? 'Unknown');
+
+    const t4Dead = Number(raw.t4_dead_num ?? 0) || 0;
+    const t5Dead = Number(raw.t5_dead_num ?? 0) || 0;
+    const t4Heal = Number(raw.t4_heal_num ?? 0) || 0;
+    const t5Heal = Number(raw.t5_heal_num ?? 0) || 0;
+
+    return {
+        ...raw,
+        id,
+        name,
+        rank: Number(raw.rank) || 0,
+        current_power: Number(raw.power ?? raw.current_power) || 0,
+        max_power: Number(raw.power_highest ?? raw.max_power) || 0,
+
+        merits: Number(raw.pvpmoney_num ?? raw.merits) || 0,
+        enemy_merits: Number(raw.enemy_pvpmoney ?? raw.enemy_merits) || 0,
+        gathering: Number(raw.gather_num ?? raw.gathering) || 0,
+
+        deaths_t4_t5:
+            (raw.deaths_t4_t5 !== undefined)
+                ? (Number(raw.deaths_t4_t5) || 0)
+                : t4Dead + t5Dead,
+
+        healing_t4_t5:
+            (raw.healing_t4_t5 !== undefined)
+                ? (Number(raw.healing_t4_t5) || 0)
+                : t4Heal + t5Heal,
+
+        t4_dead_num: t4Dead,
+        t5_dead_num: t5Dead,
+        t4_heal_num: t4Heal,
+        t5_heal_num: t5Heal,
+        t4_bad_hurt: Number(raw.t4_bad_hurt) || 0,
+        t5_bad_hurt: Number(raw.t5_bad_hurt) || 0,
+
+        // New API gives the real troop kill/death totals directly.
+        kill_num: Number(raw.kill_num) || 0,
+        dead_num: Number(raw.dead_num) || 0,
+        heal_num: Number(raw.heal_num) || 0,
+
+        // Keep old names for UI code that still uses them.
+        infantry_kills: Number(raw.infantry_kills) || 0,
+        cavalry_kills: Number(raw.cavalry_kills) || 0,
+        archers_kills: Number(raw.archers_kills) || 0,
+        mage_kills: Number(raw.mage_kills) || 0,
+        other_merits: Number(raw.other_merits) || 0
+    };
+}
+
+function normalizeDayData(data) {
+    if (!data || !Array.isArray(data.players)) return data;
+    return {
+        ...data,
+        players: data.players.map(normalizePlayer)
+    };
+}
+
+async function loadLatestDate() {
+
+    const dateElement = document.getElementById("latestDateText");
+
+    try {
+
+        const response = await fetch("../../data/days/list.json");
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const list = await response.json();
+
+        if (!Array.isArray(list) || list.length === 0) {
+            throw new Error("list.json does not contain any dates");
+        }
+
+        rawDateMap = {};
+
+        for (const item of list) {
+
+            const rawName = String(item)
+                .replace(/\.json$/i, "")
+                .trim();
+
+            const normalized = normalizeDate(rawName);
+
+            if (normalized) {
+                rawDateMap[normalized] = rawName;
+            }
+        }
+
+        availableDates = Object.keys(rawDateMap);
+
+        availableDates.sort((a, b) => {
+            return dateObject(b) - dateObject(a);
+        });
+
+        if (!availableDates.length) {
+            throw new Error("No valid dates found");
+        }
+
+        const newest = availableDates[0];
+
+        dateElement.textContent = newest;
+
+        return newest;
+
+    } catch (error) {
+
+        console.error("Failed to load date list:", error);
+
+        dateElement.textContent = "--";
+
+        showRadarError(
+            `Failed to load date list.<br><span class="text-xs text-red-300">${escapeHtml(error.message)}</span>`
+        );
+
+        return null;
+    }
+}
+
+async function loadLatestData() {
+
+    const newestDate = await loadLatestDate();
+
+    if (!newestDate) {
+        return;
+    }
+
+    try {
+
+        allDailyData = {};
+
+        for (const date of availableDates) {
+
+            const rawFileName = rawDateMap[date];
+
+            const cleanFileName =
+                String(rawFileName).replace(/\.json$/i, "");
+
+            const url =
+                `../../data/days/${cleanFileName}.json`;
+
+            const response =
+                await fetch(url);
+
+            if (!response.ok) {
+                console.warn(
+                    `Skipping ${date}: HTTP ${response.status}`
+                );
+                continue;
+            }
+
+            const data =
+                await response.json();
+
+            if (
+                data &&
+                Array.isArray(data.players)
+            ) {
+                allDailyData[date] = normalizeDayData(data);
+            }
+        }
+
+        if (!allDailyData[newestDate]) {
+            throw new Error(
+                "Could not load the newest day's JSON"
+            );
+        }
+
+        latestData =
+            allDailyData[newestDate];
+
+        processAllDays(newestDate);
+
+    } catch (error) {
+
+        console.error(
+            "Failed to load daily data:",
+            error
+        );
+
+        showRadarError(
+            `Failed to load data.<br><span class="text-xs text-red-300">${escapeHtml(error.message)}</span>`
+        );
+    }
+}
+
+function processAllDays(newestDate) {
+
+    const aggregate = new Map();
+
+    const datesAscending =
+        Object.keys(allDailyData).sort(
+            (a, b) => dateObject(a) - dateObject(b)
+        );
+
+    for (const date of datesAscending) {
+
+        const dayData =
+            allDailyData[date];
+
+        for (const raw of dayData.players) {
+
+            const id =
+                String(raw.id ?? "").trim();
+
+            if (!id) {
+                continue;
+            }
+
+            if (!aggregate.has(id)) {
+
+                aggregate.set(id, {
+
+                    id,
+
+                    name:
+                        raw.name || "Unknown",
+
+                    current_power: 0,
+
+                    deaths_t4_t5: 0,
+
+                    merits: 0,
+
+                    gathering: 0,
+
+                    kill_num: 0,
+
+                    infantry_kills: 0,
+
+                    cavalry_kills: 0,
+
+                    archers_kills: 0,
+
+                    mage_kills: 0,
+
+                    total_kill_points: 0,
+
+                    healing_t4_t5: 0
+                });
+            }
+
+            const player =
+                aggregate.get(id);
+
+            if (raw.name) {
+                player.name = raw.name;
+            }
+
+            if (date === newestDate) {
+
+                player.current_power =
+                    Number(raw.current_power) || 0;
+            }
+
+            player.deaths_t4_t5 +=
+                Number(raw.deaths_t4_t5) || 0;
+
+            player.merits +=
+                Number(raw.merits) || 0;
+
+            player.gathering +=
+                Number(raw.gathering) || 0;
+
+            player.infantry_kills +=
+                Number(raw.infantry_kills) || 0;
+
+            player.cavalry_kills +=
+                Number(raw.cavalry_kills) || 0;
+
+            player.archers_kills +=
+                Number(raw.archers_kills) || 0;
+
+            player.mage_kills +=
+                Number(raw.mage_kills) || 0;
+
+            player.kill_num +=
+                Number(raw.kill_num) || 0;
+
+            player.healing_t4_t5 +=
+                Number(raw.healing_t4_t5) || 0;
+        }
+    }
+
+    players =
+        Array.from(aggregate.values());
+
+    for (const player of players) {
+
+        player.total_kill_points =
+            player.kill_num;
+    }
+
+    players.sort(
+        (a, b) => b.merits - a.merits
+    );
+
+    document.getElementById(
+        "members"
+    ).textContent =
+        players.length.toLocaleString();
+
+    const totalMerits =
+        players.reduce(
+            (total, player) =>
+                total + player.merits,
+            0
+        );
+
+    document.getElementById(
+        "totalContribution"
+    ).textContent =
+        totalMerits.toLocaleString();
+
+    renderTopPlayers();
+
+    if (!players.length) {
+
+        selectedPlayerId = null;
+
+    } else if (
+        !selectedPlayerId ||
+        !players.some(
+            player =>
+                player.id === selectedPlayerId
+        )
+    ) {
+
+        selectedPlayerId =
+            players[0].id;
+    }
+
+    handleSearch(false);
+}
+
+function renderTopPlayers() {
+
+    const body =
+        document.getElementById("topPlayersBody");
+
+    if (!body) {
+        return;
+    }
+
+    const categories = [
+        {
+            label: "Deaths T4/T5",
+            key: "deaths_t4_t5"
+        },
+        {
+            label: "Merits",
+            key: "merits"
+        },
+        {
+            label: "Gathering",
+            key: "gathering"
+        },
+        {
+            label: "Total Kill Points",
+            key: "total_kill_points"
+        },
+        {
+            label: "Healing T4/T5",
+            key: "healing_t4_t5"
+        },
+        {
+            label: "Current Power",
+            key: "current_power"
+        }
+    ];
+
+    body.innerHTML = "";
+
+    for (const category of categories) {
+
+        const ranked =
+            [...players]
+                .sort(
+                    (a, b) =>
+                        (Number(b[category.key]) || 0) -
+                        (Number(a[category.key]) || 0)
+                )
+                .slice(0, 3);
+
+        const row =
+            document.createElement("tr");
+
+        const categoryCell =
+            document.createElement("td");
+
+        categoryCell.className =
+            "top-category";
+
+        categoryCell.textContent =
+            category.label;
+
+        row.appendChild(categoryCell);
+
+        for (let i = 0; i < 3; i++) {
+
+            const cell =
+                document.createElement("td");
+
+            cell.className =
+                "top-player-cell";
+
+            const player =
+                ranked[i];
+
+            if (!player) {
+
+                cell.innerHTML =
+                    '<div class="top-empty">No data</div>';
+
+                row.appendChild(cell);
+
+                continue;
+            }
+
+            const value =
+                Number(player[category.key]) || 0;
+
+            cell.innerHTML = `
+                <div class="top-player">
+                    <div class="top-rank">
+                        #${i + 1}
+                    </div>
+
+                    <div class="top-player-info">
+                        <div
+                            class="top-player-name notranslate"
+                            translate="no"
+                            title="${escapeHtml(player.name)}"
+                        >
+                            ${escapeHtml(player.name)}
+                        </div>
+
+                        <div class="top-player-value">
+                            ${value.toLocaleString()}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            cell.addEventListener("click", () => {
+
+                selectedPlayerId =
+                    player.id;
+
+                handleSearch(false);
+
+                const selectedRow =
+                    document.querySelector(
+                        `.player-row.selected`
+                    );
+
+                if (selectedRow) {
+                    selectedRow.scrollIntoView({
+                        block: "nearest"
+                    });
+                }
+            });
+
+            cell.style.cursor = "pointer";
+
+            row.appendChild(cell);
+        }
+
+        body.appendChild(row);
+    }
+}
+
+function handleSearch(autoSelect = true) {
+
+    const input =
+        document.getElementById("searchInput");
+
+    const query =
+        input.value.toLowerCase().trim();
+
+    filteredPlayers = players.filter(player => {
+
+        return (
+            player.name.toLowerCase().includes(query) ||
+            player.id.toLowerCase().includes(query)
+        );
+    });
+
+    if (
+        autoSelect &&
+        !filteredPlayers.some(
+            player => player.id === selectedPlayerId
+        )
+    ) {
+
+        selectedPlayerId =
+            filteredPlayers.length
+                ? filteredPlayers[0].id
+                : null;
+    }
+
+    renderPlayerList();
+    updateSelectedPlayer();
+}
+
+document
+    .getElementById("searchInput")
+    .addEventListener("input", () => handleSearch());
+
+function renderPlayerList() {
+
+    const viewport =
+        document.getElementById("playerListViewport");
+
+    const body =
+        document.getElementById("playerListBody");
+
+    if (!filteredPlayers.length) {
+
+        body.style.height = "0px";
+        body.innerHTML = "";
+
+        return;
+    }
+
+    body.style.height =
+        `${filteredPlayers.length * PLAYER_ROW_HEIGHT}px`;
+
+    const scrollTop =
+        viewport.scrollTop;
+
+    const viewportHeight =
+        viewport.clientHeight;
+
+    let startIndex =
+        Math.floor(scrollTop / PLAYER_ROW_HEIGHT)
+        - VIRTUAL_BUFFER;
+
+    let endIndex =
+        Math.ceil(
+            (scrollTop + viewportHeight)
+            / PLAYER_ROW_HEIGHT
+        )
+        + VIRTUAL_BUFFER;
+
+    startIndex =
+        Math.max(0, startIndex);
+
+    endIndex =
+        Math.min(
+            filteredPlayers.length,
+            endIndex
+        );
+
+    const fragment =
+        document.createDocumentFragment();
+
+    for (
+        let index = startIndex;
+        index < endIndex;
+        index++
+    ) {
+
+        const player =
+            filteredPlayers[index];
+
+        const row =
+            document.createElement("div");
+
+        row.className =
+            "player-row" +
+            (
+                player.id === selectedPlayerId
+                    ? " selected"
+                    : ""
+            );
+
+        row.style.top =
+            `${index * PLAYER_ROW_HEIGHT}px`;
+
+        row.innerHTML = `
+            <div class="player-index">
+                ${index + 1}
+            </div>
+
+            <div
+                class="player-name notranslate"
+                translate="no"
+                title="${escapeHtml(player.name)}"
+            >
+                ${escapeHtml(player.name)}
+            </div>
+
+            <div class="player-id">
+                ${escapeHtml(player.id)}
+            </div>
+        `;
+
+        row.addEventListener("click", () => {
+
+            selectedPlayerId =
+                player.id;
+
+            renderPlayerList();
+            updateSelectedPlayer();
+        });
+
+        fragment.appendChild(row);
+    }
+
+    body.innerHTML = "";
+    body.appendChild(fragment);
+}
+
+function schedulePlayerListRender() {
+
+    if (listAnimationFrame) {
+        return;
+    }
+
+    listAnimationFrame =
+        requestAnimationFrame(() => {
+
+            listAnimationFrame = null;
+
+            renderPlayerList();
+        });
+}
+
+document
+    .getElementById("playerListViewport")
+    .addEventListener(
+        "scroll",
+        schedulePlayerListRender,
+        { passive: true }
+    );
+
+window.addEventListener(
+    "resize",
+    schedulePlayerListRender
+);
+
+function getAverage(metric) {
+
+    if (!players.length) {
+        return 0;
+    }
+
+    return players.reduce(
+        (sum, player) =>
+            sum + (Number(player[metric]) || 0),
+        0
+    ) / players.length;
+}
+
+function getRatioPercent(value, average) {
+
+    if (
+        !average ||
+        !Number.isFinite(average)
+    ) {
+        return 0;
+    }
+
+    return (value / average) * 100;
+}
+
+function updateSelectedPlayer() {
+
+    const player =
+        players.find(
+            p => p.id === selectedPlayerId
+        );
+
+    if (!player) {
+
+        clearRadar();
+
+        return;
+    }
+
+    document.getElementById(
+        "selectedPlayerName"
+    ).textContent =
+        `${player.name} • ${player.id}`;
+
+    const metrics = [
+
+        {
+            key: "current_power",
+            label: "Power"
+        },
+
+        {
+            key: "deaths_t4_t5",
+            label: "Deaths T4/T5"
+        },
+
+        {
+            key: "merits",
+            label: "Merits"
+        },
+
+        {
+            key: "gathering",
+            label: "Gathering"
+        },
+
+        {
+            key: "total_kill_points",
+            label: "Total Kill Points"
+        },
+
+        {
+            key: "healing_t4_t5",
+            label: "Healing T4/T5"
+        }
+    ];
+
+    const results =
+        metrics.map(metric => {
+
+            const value =
+                Number(player[metric.key]) || 0;
+
+            const average =
+                getAverage(metric.key);
+
+            const ratio =
+                getRatioPercent(
+                    value,
+                    average
+                );
+
+            return {
+                ...metric,
+                value,
+                average,
+                ratio
+            };
+        });
+
+    renderStats(results);
+
+    renderRadar(
+        player,
+        results
+    );
+}
+
+function renderStats(results) {
+
+    const wrapper =
+        document.getElementById(
+            "selectedStats"
+        );
+
+    const grid =
+        document.getElementById(
+            "statGrid"
+        );
+
+    grid.innerHTML =
+        results.map(item => `
+
+            <div class="stat-card">
+
+                <div class="stat-label">
+                    ${item.label}
+                </div>
+
+                <div class="stat-value">
+                    ${formatNumber(item.value)}
+                </div>
+
+                <div class="stat-ratio">
+                    ${formatPercent(item.ratio)}
+                    <span class="text-gray-600">
+                        sys avg ${formatNumber(item.average)}
+                    </span>
+                </div>
+
+            </div>
+
+        `).join("");
+
+    wrapper.classList.remove("hidden");
+}
+
+function renderRadar(player, results) {
+
+    document
+        .getElementById("radarEmpty")
+        .classList.add("hidden");
+
+    document
+        .getElementById("radarCanvasWrap")
+        .classList.remove("hidden");
+
+    const labels =
+        results.map(
+            item => item.label
+        );
+
+    const rawValues =
+        results.map(item => item.ratio);
+
+    const values =
+        rawValues.map(val =>
+            Math.min(
+                Math.max(val, 1.5),
+                RADAR_MAX
+            )
+        );
+
+    const pointBorderColors = rawValues.map(val => (val >= 200 ? "#ef4444" : "#fff4a8"));
+    const pointBackgroundColors = rawValues.map(val => (val >= 200 ? "#fee2e2" : "#fff9d6"));
+
+    const customRadarLinePlugin = {
+        id: 'customRadarLinePlugin',
+        afterDatasetsDraw(chart) {
+            const { ctx } = chart;
+            const meta = chart.getDatasetMeta(0);
+            if (!meta || !meta.data || meta.data.length === 0) return;
+
+            ctx.save();
+            const points = meta.data;
+
+            for (let i = 0; i < points.length; i++) {
+                const currentPoint = points[i];
+                const nextPoint = points[(i + 1) % points.length];
+
+                const currentValue = rawValues[i];
+                const nextValue = rawValues[(i + 1) % rawValues.length];
+
+                const gradient = ctx.createLinearGradient(
+                    currentPoint.x, currentPoint.y, 
+                    nextPoint.x, nextPoint.y
+                );
+
+                const currentColor = currentValue >= 200 ? "#ef4444" : "#fff4a8";
+                const nextColor = nextValue >= 200 ? "#ef4444" : "#fff4a8";
+
+                gradient.addColorStop(0, currentColor);
+                gradient.addColorStop(1, nextColor);
+
+                ctx.beginPath();
+                ctx.moveTo(currentPoint.x, currentPoint.y);
+                ctx.lineTo(nextPoint.x, nextPoint.y);
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = gradient;
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+    };
+
+    if (radarChart) {
+        radarChart.destroy();
+    }
+
+    const canvasEl = document.getElementById("radarChart");
+
+    radarChart =
+        new Chart(
+            canvasEl,
+            {
+
+                type: "radar",
+
+                data: {
+
+                    labels,
+
+                    datasets: [
+                        {
+                            label: player.name,
+
+                            data: values,
+
+                            borderWidth: 0,
+
+                            pointRadius: 2.5,
+
+                            pointHoverRadius: 4.5,
+
+                            backgroundColor: "rgba(250, 204, 21, 0.12)",
+
+                            pointBackgroundColor: pointBackgroundColors,
+
+                            pointBorderColor: pointBorderColors
+                        }
+                    ]
+                },
+
+                plugins: [customRadarLinePlugin],
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    animation: {
+                        duration: 220
+                    },
+
+                    plugins: {
+
+                        legend: {
+                            display: false
+                        },
+
+                        tooltip: {
+                            enabled: false
+                        }
+                    },
+
+                    scales: {
+
+                        r: {
+
+                            min: 0,
+
+                            max: RADAR_MAX,
+
+                            beginAtZero: true,
+
+                            ticks: {
+
+                                stepSize: 50,
+
+                                color: "#6b7280",
+
+                                backdropColor:
+                                    "transparent",
+
+                                font: {
+                                    size: 9
+                                },
+
+                                callback: value =>
+                                    `${value}%`
+                            },
+
+                            grid: {
+                                color:
+                                    "rgba(75, 85, 99, 0.45)"
+                            },
+
+                            angleLines: {
+                                color:
+                                    "rgba(75, 85, 99, 0.45)"
+                            },
+
+                            pointLabels: {
+
+                                color:
+                                    "#facc15",
+
+                                font: {
+                                    size: 10,
+                                    weight: "600"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        );
+}
+
+function clearRadar() {
+
+    document.getElementById(
+        "selectedPlayerName"
+    ).textContent = "None";
+
+    document
+        .getElementById("selectedStats")
+        .classList.add("hidden");
+
+    document
+        .getElementById("radarCanvasWrap")
+        .classList.add("hidden");
+
+    document
+        .getElementById("radarEmpty")
+        .classList.remove("hidden");
+
+    if (radarChart) {
+
+        radarChart.destroy();
+
+        radarChart = null;
+    }
+}
+
+function showRadarError(message) {
+
+    document
+        .getElementById("radarCanvasWrap")
+        .classList.add("hidden");
+
+    const empty =
+        document.getElementById(
+            "radarEmpty"
+        );
+
+    empty.classList.remove("hidden");
+
+    empty.innerHTML = message;
+}
+
+loadLatestData();
+
+</script>
+
+</body>
+</html>

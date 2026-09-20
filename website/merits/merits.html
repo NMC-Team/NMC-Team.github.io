@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NMC Merit Ranking</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config={darkMode:'class'};
+</script>
+<style>
+:root{--bg-color:#0b0f19;--panel-bg:#111827;--panel-border:#1f2937;--text-primary:#f9fafb;--text-secondary:#9ca3af;--accent:#8b5cf6;--accent-hover:#7c3aed}
+*{scrollbar-width:thin;scrollbar-color:#374151 transparent}
+.border,.border-b,.border-t,.border-l,.border-r{border-color:rgba(55,65,81,.55)!important}
+.border{border-width:1px!important}.border-b{border-bottom-width:1px!important}.border-t{border-top-width:1px!important}.border-l{border-left-width:1px!important}.border-r{border-right-width:1px!important}
+html{scroll-behavior:auto}
+body{font-family:Inter,system-ui,-apple-system,sans-serif;background-color:var(--bg-color);color:var(--text-primary)}
+.table-container-cq{container-type:inline-size;container-name:nmc-table}
+.grid-layout{display:grid;grid-template-columns:minmax(55px,.9fr) minmax(35px,.55fr) minmax(0,3fr) minmax(0,2fr) minmax(0,2.1fr);align-items:center;width:100%;gap:6px}
+.grid-layout>div{min-width:0;overflow:hidden}
+.player-cell{padding-left:8px}
+.sort-btn{background:none;border:none;color:var(--text-secondary);font:inherit;cursor:pointer;padding:0;display:inline-flex;align-items:center;gap:3px;transition:color .15s}
+.sort-btn:hover,.sort-btn.active{color:var(--text-primary)}
+.sort-arrow{font-size:.65rem;opacity:.4}
+.sort-btn.active .sort-arrow{opacity:1;color:var(--accent)}
+.glow-row{position:absolute;left:0;right:0;height:30px;transition:background-color .12s;border-bottom:1px solid rgba(55,65,81,.55);box-sizing:border-box}
+.glow-row:hover,.glow-row.touch-active{background-color:#1f2937}
+.table-header-fixed{position:sticky;top:0;z-index:100;min-height:42px;box-sizing:border-box;border-bottom:1px solid rgba(55,65,81,.55);border-top-left-radius:.75rem;border-top-right-radius:.75rem;isolation:isolate}
+.table-header-fixed::before{content:"";position:absolute;inset:0;z-index:-1;background:#161e2e;border-top-left-radius:inherit;border-top-right-radius:inherit;pointer-events:none}
+.table-container-cq,#headerWrapper,#tableContainer,#tableHeader,#searchInput,#dateControls>div,#members,#totalContribution,#exportCsvBtn,#startBtn,#endBtn{border-color:rgba(55,65,81,.55)!important}
+#tableContainer{position:relative;isolation:isolate;border-radius:.75rem;overflow:clip}
+.table-header-fixed.is-stuck,.table-header-fixed.is-stuck::before{border-radius:0!important}
+.virtual-body{position:relative;width:100%}
+.date-dropdown{position:absolute;z-index:150;background-color:#1f2937;border:1px solid #374151;border-radius:.5rem;box-shadow:0 10px 15px -3px rgba(0,0,0,.5);max-height:200px;overflow-y:auto}
+.date-item{color:#d1d5db;padding:.5rem .75rem;font-family:ui-monospace,monospace;font-size:.75rem;cursor:pointer}
+.date-item:hover,.date-item.active-date{background-color:var(--accent);color:#fff}
+@container nmc-table (max-width:560px){
+.grid-layout{grid-template-columns:minmax(42px,.8fr) minmax(26px,.5fr) minmax(0,2.8fr) minmax(0,1.8fr) minmax(0,2fr);gap:3px}
+.glow-row{height:27px}
+.table-header-fixed{min-height:38px}
+}
+</style>
+</head>
+<body class="min-h-screen pb-12">
+
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+
+<header id="headerWrapper" class="mt-4 rounded-xl bg-gray-900 border border-gray-800 p-5 shadow-lg">
+<div class="flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
+
+<div>
+<h1 class="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">No Mercy</h1>
+<p class="text-indigo-400 font-medium text-xs mt-1">Member Contribution & Merits Leaderboard</p>
+</div>
+
+<div id="dateControls" class="flex flex-wrap items-center justify-center gap-3">
+<div class="bg-gray-800/80 border border-gray-700 rounded-lg px-3 py-2 flex items-center gap-3">
+
+<div class="date-control flex items-center gap-2">
+<label class="text-[10px] text-gray-400 font-semibold uppercase">From</label>
+<div class="relative">
+<button type="button" id="startBtn" onclick="toggleDropdown('start')" aria-label="Choose start date" aria-expanded="false" class="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-[11px] font-mono text-white flex items-center justify-between min-w-[84px]">
+<span id="startText">--</span>
+<svg class="w-3 h-3 text-gray-400 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+</svg>
+</button>
+<div id="startDropdown" class="date-dropdown hidden left-0 mt-1 w-28"></div>
+</div>
+</div>
+
+<div class="date-control flex items-center gap-2">
+<label class="text-[10px] text-gray-400 font-semibold uppercase">To</label>
+<div class="relative">
+<button type="button" id="endBtn" onclick="toggleDropdown('end')" aria-label="Choose end date" aria-expanded="false" class="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-[11px] font-mono text-white flex items-center justify-between min-w-[84px]">
+<span id="endText">--</span>
+<svg class="w-3 h-3 text-gray-400 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+</svg>
+</button>
+<div id="endDropdown" class="date-dropdown hidden right-0 mt-1 w-28"></div>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+</header>
+
+<div class="mt-5 flex flex-row flex-wrap justify-between items-center gap-3">
+
+<div class="relative w-full sm:w-80 flex-1 sm:flex-none min-w-0">
+<input type="text" id="searchInput" placeholder="Search by name or ID..." oninput="handleSearch()" aria-label="Search by player name or ID" class="w-full bg-gray-900 border border-gray-800 rounded-lg py-1.5 pl-8 pr-3 text-xs text-gray-100 placeholder-gray-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors">
+<svg class="w-3.5 h-3.5 absolute left-2.5 top-2 text-gray-500 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+</svg>
+</div>
+
+<div class="flex items-center justify-end gap-2 w-full sm:w-auto flex-wrap ml-auto">
+
+<div class="bg-gray-900 border border-gray-800 rounded-lg px-3 py-1 text-center min-w-[70px]">
+<div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Members</div>
+<div id="members" class="text-sm font-extrabold text-indigo-400">0</div>
+</div>
+
+<div class="bg-gray-900 border border-gray-800 rounded-lg px-3 py-1 text-center min-w-[100px]">
+<div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Total Merits</div>
+<div id="totalContribution" class="text-sm font-extrabold text-indigo-400">0</div>
+</div>
+
+<button type="button" id="exportCsvBtn" onclick="exportCSV()" aria-label="Export current table view as CSV" class="bg-gray-900 hover:bg-gray-800 border border-gray-800 text-gray-300 hover:text-white px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-colors">
+Export CSV
+</button>
+
+</div>
+</div>
+
+<div class="mt-3">
+<div id="tableContainer" class="rounded-xl bg-gray-900 border border-gray-800 shadow-lg table-container-cq">
+
+<div id="tableHeader" class="grid-layout border-b border-gray-800 px-3 py-3 text-[12px] font-bold text-gray-300 uppercase tracking-wider table-header-fixed" role="row">
+
+<div>
+<button id="btn-id" class="sort-btn" onclick="sortData('id')" aria-label="Sort by ID">
+ID <span id="arrow-id" class="sort-arrow">▼</span>
+</button>
+</div>
+
+<div class="text-center">
+<button id="btn-rank" class="sort-btn active mx-auto" onclick="sortData('rank')" aria-label="Sort by rank">
+Rank <span id="arrow-rank" class="sort-arrow">▼</span>
+</button>
+</div>
+
+<div class="player-cell">
+<button id="btn-name" class="sort-btn" onclick="sortData('name')" aria-label="Sort by player name">
+Player <span id="arrow-name" class="sort-arrow">▼</span>
+</button>
+</div>
+
+<div class="text-right">
+<button id="btn-merits" class="sort-btn ml-auto" onclick="sortData('merits')" aria-label="Sort by merits">
+Merits <span id="arrow-merits" class="sort-arrow">▼</span>
+</button>
+</div>
+
+<div class="text-right">
+<button id="btn-contribution" class="sort-btn ml-auto" onclick="sortData('contribution')" aria-label="Sort by contribution percentage">
+Contrib. <span id="arrow-contribution" class="sort-arrow">▼</span>
+</button>
+</div>
+
+</div>
+
+<div id="tableBody" class="virtual-body">
+<div class="p-8 text-center text-gray-500">Loading data...</div>
+</div>
+
+</div>
+</div>
+
+</div>
+
+<script>
+let availableDates=[];
+let rawDateMap={};
+let allDailyData={};
+let players=[];
+let filteredPlayers=[];
+let total=0;
+let currentSortType='rank';
+let sortDirection=1;
+let selectedStartDate='';
+let selectedEndDate='';
+let latestDate='';
+
+const ROW_HEIGHT=30;
+const MOBILE_ROW_HEIGHT=27;
+const VIRTUAL_BUFFER=2;
+let virtualAnimationFrame=null;
+let virtualRenderToken=0;
+
+function getRowHeight(){
+return window.innerWidth<=560?MOBILE_ROW_HEIGHT:ROW_HEIGHT;
+}
+
+function parseDate(value){
+let s=String(value??'').replace(/\.json$/i,'').trim();
+if(!s)return null;
+
+let d,m,y;
+let match=s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/);
+
+if(match){
+y=Number(match[1]);
+m=Number(match[2]);
+d=Number(match[3]);
+}else{
+match=s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/);
+if(!match)return null;
+d=Number(match[1]);
+m=Number(match[2]);
+y=Number(match[3]);
+}
+
+const date=new Date(y,m-1,d);
+
+if(
+date.getFullYear()!==y||
+date.getMonth()!==m-1||
+date.getDate()!==d
+)return null;
+
+const key=
+`${y.toString().padStart(4,'0')}-${m.toString().padStart(2,'0')}-${d.toString().padStart(2,'0')}`;
+
+const display=
+`${d.toString().padStart(2,'0')}-${m.toString().padStart(2,'0')}-${y}`;
+
+return{key,display};
+}
+
+function displayDate(key){
+const parsed=parseDate(key);
+return parsed?parsed.display:key;
+}
+
+function preventPageScrollInsideDropdown(element){
+element.addEventListener('wheel',function(e){
+const atTop=element.scrollTop<=0;
+const atBottom=element.scrollTop+element.clientHeight>=element.scrollHeight-1;
+
+if((atTop&&e.deltaY<0)||(atBottom&&e.deltaY>0))
+e.preventDefault();
+},{passive:false});
+}
+
+preventPageScrollInsideDropdown(document.getElementById('startDropdown'));
+preventPageScrollInsideDropdown(document.getElementById('endDropdown'));
+
+function closeDropdowns(e){
+const startDropdown=document.getElementById('startDropdown');
+const endDropdown=document.getElementById('endDropdown');
+
+if(!e.target.closest('#startBtn')&&!e.target.closest('#startDropdown')){
+startDropdown.classList.add('hidden');
+document.getElementById('startBtn').setAttribute('aria-expanded','false');
+}
+
+if(!e.target.closest('#endBtn')&&!e.target.closest('#endDropdown')){
+endDropdown.classList.add('hidden');
+document.getElementById('endBtn').setAttribute('aria-expanded','false');
+}
+}
+
+window.addEventListener('click',closeDropdowns);
+document.addEventListener('touchstart',closeDropdowns,{passive:true});
+
+let activeTouchRow=null;
+
+document.getElementById('tableBody').addEventListener('touchstart',e=>{
+const row=e.target.closest('.glow-row');
+if(!row)return;
+
+if(activeTouchRow&&activeTouchRow!==row)
+activeTouchRow.classList.remove('touch-active');
+
+row.classList.add('touch-active');
+activeTouchRow=row;
+},{passive:true});
+
+document.getElementById('tableBody').addEventListener('touchmove',()=>{
+if(activeTouchRow){
+activeTouchRow.classList.remove('touch-active');
+activeTouchRow=null;
+}
+},{passive:true});
+
+function toggleDropdown(type){
+const start=document.getElementById('startDropdown');
+const end=document.getElementById('endDropdown');
+const startBtn=document.getElementById('startBtn');
+const endBtn=document.getElementById('endBtn');
+
+if(type==='start'){
+start.classList.toggle('hidden');
+end.classList.add('hidden');
+}else{
+end.classList.toggle('hidden');
+start.classList.add('hidden');
+}
+
+startBtn.setAttribute('aria-expanded',!start.classList.contains('hidden'));
+endBtn.setAttribute('aria-expanded',!end.classList.contains('hidden'));
+}
+
+
+function normalizePlayer(raw) {
+    const id = String(raw.role_id ?? raw.id ?? '').trim();
+    const name = String(raw.role_name ?? raw.name ?? 'Unknown');
+
+    const t4Dead = Number(raw.t4_dead_num ?? 0) || 0;
+    const t5Dead = Number(raw.t5_dead_num ?? 0) || 0;
+    const t4Heal = Number(raw.t4_heal_num ?? 0) || 0;
+    const t5Heal = Number(raw.t5_heal_num ?? 0) || 0;
+
+    return {
+        ...raw,
+        id,
+        name,
+        rank: Number(raw.rank) || 0,
+        current_power: Number(raw.power ?? raw.current_power) || 0,
+        max_power: Number(raw.power_highest ?? raw.max_power) || 0,
+
+        merits: Number(raw.pvpmoney_num ?? raw.merits) || 0,
+        enemy_merits: Number(raw.enemy_pvpmoney ?? raw.enemy_merits) || 0,
+        gathering: Number(raw.gather_num ?? raw.gathering) || 0,
+
+        deaths_t4_t5:
+            (raw.deaths_t4_t5 !== undefined)
+                ? (Number(raw.deaths_t4_t5) || 0)
+                : t4Dead + t5Dead,
+
+        healing_t4_t5:
+            (raw.healing_t4_t5 !== undefined)
+                ? (Number(raw.healing_t4_t5) || 0)
+                : t4Heal + t5Heal,
+
+        t4_dead_num: t4Dead,
+        t5_dead_num: t5Dead,
+        t4_heal_num: t4Heal,
+        t5_heal_num: t5Heal,
+        t4_bad_hurt: Number(raw.t4_bad_hurt) || 0,
+        t5_bad_hurt: Number(raw.t5_bad_hurt) || 0,
+
+        // New API gives the real troop kill/death totals directly.
+        kill_num: Number(raw.kill_num) || 0,
+        dead_num: Number(raw.dead_num) || 0,
+        heal_num: Number(raw.heal_num) || 0,
+
+        // Keep old names for UI code that still uses them.
+        infantry_kills: Number(raw.infantry_kills) || 0,
+        cavalry_kills: Number(raw.cavalry_kills) || 0,
+        archers_kills: Number(raw.archers_kills) || 0,
+        mage_kills: Number(raw.mage_kills) || 0,
+        other_merits: Number(raw.other_merits) || 0
+    };
+}
+
+function normalizeDayData(data) {
+    if (!data || !Array.isArray(data.players)) return data;
+    return {
+        ...data,
+        players: data.players.map(normalizePlayer)
+    };
+}
+
+async function initDateSelectors(){
+try{
+const res=await fetch('../../data/days/list.json',{cache:'no-store'});
+
+if(!res.ok)
+throw new Error(`HTTP ${res.status}`);
+
+const rawList=await res.json();
+
+if(!Array.isArray(rawList))
+throw new Error('data/list.json must contain an array');
+
+rawDateMap={};
+
+const dates=[];
+
+rawList.forEach(item=>{
+const rawName=
+typeof item==='object'&&item!==null
+?String(item.file??item.filename??item.date??'')
+:String(item);
+
+const parsed=parseDate(rawName);
+
+if(!parsed)return;
+
+if(rawDateMap[parsed.key])return;
+
+rawDateMap[parsed.key]=rawName.replace(/\.json$/i,'').trim();
+dates.push(parsed.key);
+});
+
+availableDates=[...new Set(dates)].sort((a,b)=>a.localeCompare(b));
+
+latestDate=
+availableDates.length
+?availableDates[availableDates.length-1]
+:'';
+
+}catch(error){
+
+console.error(error);
+
+document.getElementById('tableBody').innerHTML=`
+<div class="p-8 text-center text-red-400 text-sm">
+Failed to load date list.<br>
+<span class="text-xs text-red-300">${error.message}</span>
+</div>`;
+
+return;
+}
+
+if(!availableDates.length){
+
+document.getElementById('tableBody').innerHTML=`
+<div class="p-8 text-center text-gray-500 text-sm">
+No date data available
+</div>`;
+
+return;
+}
+
+selectedStartDate=availableDates[0];
+selectedEndDate=availableDates[availableDates.length-1];
+
+renderDropdownOptions();
+}
+
+function renderDropdownOptions(){
+const startDD=document.getElementById('startDropdown');
+const endDD=document.getElementById('endDropdown');
+
+startDD.innerHTML='';
+endDD.innerHTML='';
+
+availableDates.forEach(date=>{
+const label=displayDate(date);
+
+startDD.innerHTML+=`
+<div
+onclick="selectDate('start','${date}')"
+class="date-item ${date===selectedStartDate?'active-date font-bold':''}"
+role="option">
+${label}
+</div>`;
+
+endDD.innerHTML+=`
+<div
+onclick="selectDate('end','${date}')"
+class="date-item ${date===selectedEndDate?'active-date font-bold':''}"
+role="option">
+${label}
+</div>`;
+});
+
+document.getElementById('startText').innerText=displayDate(selectedStartDate);
+document.getElementById('endText').innerText=displayDate(selectedEndDate);
+}
+
+function selectDate(type,date){
+if(type==='start'){
+
+selectedStartDate=date;
+
+if(selectedStartDate>selectedEndDate)
+selectedEndDate=selectedStartDate;
+
+document.getElementById('startDropdown').classList.add('hidden');
+document.getElementById('startBtn').setAttribute('aria-expanded','false');
+
+}else{
+
+selectedEndDate=date;
+
+if(selectedStartDate>selectedEndDate)
+selectedStartDate=selectedEndDate;
+
+document.getElementById('endDropdown').classList.add('hidden');
+document.getElementById('endBtn').setAttribute('aria-expanded','false');
+}
+
+renderDropdownOptions();
+processDataRange();
+}
+
+async function loadData(){
+await initDateSelectors();
+
+if(!availableDates.length||!latestDate)
+return;
+
+try{
+
+allDailyData={};
+
+await Promise.all(
+availableDates.map(async date=>{
+
+const rawFileName=rawDateMap[date];
+
+const url=
+`../../data/days/${rawFileName}.json`;
+
+try{
+
+const res=
+await fetch(url,{cache:'no-store'});
+
+if(!res.ok)
+return;
+
+const data=await res.json();
+
+if(data&&Array.isArray(data.players))
+allDailyData[date]=normalizeDayData(data);
+
+}catch(e){
+
+console.error(`Failed to load ${url}`,e);
+
+}
+})
+);
+
+processDataRange();
+
+}catch(err){
+
+console.error(err);
+
+document.getElementById('tableBody').innerHTML=`
+<div class="p-8 text-center text-red-400 text-sm">
+Failed to load data<br>
+<span class="text-xs text-red-300">${err.message}</span>
+</div>`;
+}
+}
+
+function processDataRange(){
+
+if(
+!selectedStartDate||
+!selectedEndDate||
+!latestDate
+)
+return;
+
+const latestDayData=
+allDailyData[latestDate];
+
+if(
+!latestDayData||
+!Array.isArray(latestDayData.players)
+){
+
+players=[];
+filteredPlayers=[];
+
+document.getElementById('members').innerText='0';
+document.getElementById('totalContribution').innerText='0';
+
+renderVirtual();
+
+return;
+}
+
+const playerMap={};
+
+latestDayData.players.forEach(p=>{
+
+const id=String(p.id??'').trim();
+
+if(!id)
+return;
+
+playerMap[id]={
+id:id,
+name:String(p.name??'Unknown'),
+merits:0
+};
+});
+
+const filteredDates=
+availableDates.filter(
+date=>
+date>=selectedStartDate&&
+date<=selectedEndDate
+);
+
+filteredDates.forEach(date=>{
+
+const dayData=
+allDailyData[date];
+
+if(
+!dayData||
+!Array.isArray(dayData.players)
+)
+return;
+
+dayData.players.forEach(p=>{
+
+const id=
+String(p.id??'').trim();
+
+if(
+!id||
+!playerMap[id]
+)
+return;
+
+playerMap[id].merits+=
+Number(p.merits)||0;
+});
+});
+
+players=Object.values(playerMap);
+
+total=
+players.reduce(
+(sum,p)=>sum+p.merits,
+0
+);
+
+document.getElementById('members').innerText=
+players.length.toLocaleString();
+
+document.getElementById('totalContribution').innerText=
+total.toLocaleString();
+
+players.sort(
+(a,b)=>b.merits-a.merits
+);
+
+players.forEach(
+(p,index)=>{
+p.baseRank=index+1;
+}
+);
+
+handleSearch();
+}
+
+function handleSearch(){
+
+const query=
+document.getElementById('searchInput')
+.value
+.toLowerCase()
+.trim();
+
+filteredPlayers=
+players.filter(p=>
+p.name.toLowerCase().includes(query)||
+p.id.toLowerCase().includes(query)
+);
+
+renderVirtual();
+}
+
+function createRow(p,index){
+
+const percent=
+total
+?((p.merits/total)*100).toFixed(2)
+:'0.00';
+
+let nameStyle=
+'text-gray-200 font-medium';
+
+let rankBadge=`
+<span class="text-gray-400 font-mono text-[10px]">
+${p.baseRank}
+</span>`;
+
+if(p.baseRank===1){
+
+nameStyle='text-red-400 font-semibold';
+
+rankBadge=`
+<span class="bg-red-500/10 text-red-400 border border-red-500/20 px-1.5 py-0.5 rounded text-[10px] font-bold">
+1
+</span>`;
+
+}else if(p.baseRank===2){
+
+nameStyle='text-amber-400 font-semibold';
+
+rankBadge=`
+<span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-1.5 py-0.5 rounded text-[10px] font-bold">
+2
+</span>`;
+
+}else if(p.baseRank===3){
+
+nameStyle='text-purple-400 font-semibold';
+
+rankBadge=`
+<span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 px-1.5 py-0.5 rounded text-[10px] font-bold">
+3
+</span>`;
+
+}else if(p.baseRank===4){
+
+nameStyle='text-blue-400 font-semibold';
+
+rankBadge=`
+<span class="bg-blue-400/10 text-blue-400 border border-blue-500/20 px-1.5 py-0.5 rounded text-[10px] font-bold">
+4
+</span>`;
+}
+
+const row=document.createElement('div');
+
+row.className='glow-row px-3 py-0';
+
+row.style.top=
+`${index*getRowHeight()}px`;
+
+row.innerHTML=`
+<div class="grid-layout h-full text-[10px] sm:text-[11px]">
+
+<div
+class="font-mono text-gray-400 truncate"
+title="${p.id}">
+${p.id}
+</div>
+
+<div class="text-center font-mono">
+${rankBadge}
+</div>
+
+<div
+class="player-cell truncate ${nameStyle} notranslate"
+translate="no"
+title="${p.name}">
+${p.name}
+</div>
+
+<div
+class="text-right font-mono font-bold text-gray-100 truncate">
+${p.merits.toLocaleString()}
+</div>
+
+<div class="flex items-center justify-end gap-1 min-w-0">
+
+<span
+class="text-indigo-400 font-mono text-[9px] sm:text-[10px] font-semibold w-9 text-right shrink-0">
+${percent}%
+</span>
+
+<div class="w-10 sm:w-12 bg-gray-800 h-1 rounded-full overflow-hidden shrink-0">
+<div
+class="bg-indigo-500 h-full rounded-full"
+style="width:${Math.min(Number(percent),100)}%">
+</div>
+</div>
+
+</div>
+
+</div>
+`;
+
+return row;
+}
+
+function renderVirtual(){
+
+const renderToken=
+++virtualRenderToken;
+
+if(
+renderToken!==virtualRenderToken
+)
+return;
+
+const tbody=
+document.getElementById('tableBody');
+
+if(!filteredPlayers.length){
+
+tbody.innerHTML=`
+<div class="p-8 text-center text-gray-500 text-sm">
+No matching players
+</div>`;
+
+tbody.style.height='auto';
+
+return;
+}
+
+const rowHeight=
+getRowHeight();
+
+const totalHeight=
+filteredPlayers.length*rowHeight;
+
+tbody.style.height=
+`${totalHeight}px`;
+
+const viewportTop=
+window.scrollY;
+
+const bodyRect=
+tbody.getBoundingClientRect();
+
+const bodyTop=
+viewportTop+bodyRect.top;
+
+const relativeScroll=
+Math.max(
+0,
+viewportTop-bodyTop
+);
+
+const viewportHeight=
+window.innerHeight;
+
+let startIndex=
+Math.floor(relativeScroll/rowHeight)-
+VIRTUAL_BUFFER;
+
+let endIndex=
+Math.ceil(
+(relativeScroll+viewportHeight)/
+rowHeight
+)+VIRTUAL_BUFFER;
+
+startIndex=
+Math.max(0,startIndex);
+
+endIndex=
+Math.min(
+filteredPlayers.length,
+endIndex
+);
+
+tbody.innerHTML='';
+
+const fragment=
+document.createDocumentFragment();
+
+for(
+let i=startIndex;
+i<endIndex;
+i++
+){
+
+fragment.appendChild(
+createRow(
+filteredPlayers[i],
+i
+)
+);
+
+}
+
+tbody.appendChild(fragment);
+}
+
+function scheduleVirtualRender(){
+
+if(virtualAnimationFrame)
+return;
+
+virtualAnimationFrame=
+requestAnimationFrame(()=>{
+virtualAnimationFrame=null;
+renderVirtual();
+});
+}
+
+window.addEventListener(
+'scroll',
+scheduleVirtualRender,
+{passive:true}
+);
+
+window.addEventListener(
+'resize',
+scheduleVirtualRender,
+{passive:true}
+);
+
+function updateStickyHeaderState(){
+
+const container=
+document.getElementById('tableContainer');
+
+const header=
+document.getElementById('tableHeader');
+
+if(!container||!header)
+return;
+
+header.classList.toggle(
+'is-stuck',
+container.getBoundingClientRect().top<=0
+);
+}
+
+window.addEventListener(
+'scroll',
+updateStickyHeaderState,
+{passive:true}
+);
+
+window.addEventListener(
+'resize',
+updateStickyHeaderState,
+{passive:true}
+);
+
+updateStickyHeaderState();
+
+function sortData(type){
+
+if(currentSortType===type){
+
+sortDirection*=-1;
+
+}else{
+
+currentSortType=type;
+sortDirection=1;
+
+}
+
+filteredPlayers.sort((a,b)=>{
+
+if(type==='rank')
+return sortDirection*
+(a.baseRank-b.baseRank);
+
+if(type==='id'){
+
+const idA=Number(a.id);
+const idB=Number(b.id);
+
+if(
+!Number.isNaN(idA)&&
+!Number.isNaN(idB)
+)
+return sortDirection*
+(idA-idB);
+
+return sortDirection*
+a.id.localeCompare(b.id);
+}
+
+if(type==='name')
+return sortDirection*
+a.name.localeCompare(b.name);
+
+if(
+type==='merits'||
+type==='contribution'
+)
+return sortDirection*
+(a.merits-b.merits);
+
+return 0;
+});
+
+[
+'rank',
+'id',
+'name',
+'merits',
+'contribution'
+].forEach(col=>{
+
+const btn=
+document.getElementById(
+`btn-${col}`
+);
+
+const arrow=
+document.getElementById(
+`arrow-${col}`
+);
+
+if(btn)
+btn.classList.toggle(
+'active',
+col===type
+);
+
+if(arrow){
+
+arrow.innerText=
+col===type
+?(sortDirection===1?'▼':'▲')
+:'▼';
+
+}
+
+});
+
+renderVirtual();
+}
+
+function exportCSV(){
+
+if(!filteredPlayers.length)
+return;
+
+const header=[
+'ID',
+'Player',
+'Merits',
+'Contribution %'
+];
+
+const rows=
+filteredPlayers.map(p=>{
+
+const percent=
+total
+?((p.merits/total)*100).toFixed(2)
+:'0.00';
+
+const escape=
+val=>
+`"${String(val).replace(/"/g,'""')}"`;
+
+return[
+escape(p.id),
+escape(p.name),
+escape(p.merits),
+escape(percent)
+].join(',');
+});
+
+const csvContent=
+[
+header.join(','),
+...rows
+].join('\r\n');
+
+const blob=
+new Blob(
+[csvContent],
+{type:'text/csv;charset=utf-8;'}
+);
+
+const url=
+URL.createObjectURL(blob);
+
+const link=
+document.createElement('a');
+
+link.href=url;
+
+link.download=
+`nmc-merits-${selectedStartDate}_to_${selectedEndDate}.csv`;
+
+document.body.appendChild(link);
+
+link.click();
+
+document.body.removeChild(link);
+
+URL.revokeObjectURL(url);
+}
+
+loadData();
+</script>
+
+</body>
+</html>
