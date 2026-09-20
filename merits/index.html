@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merits — NMC Alliance Hub</title>
+    <meta name="description" content="Merit and contribution leaderboard for the No Mercy alliance, Kingdom 820.">
+    <meta name="theme-color" content="#080a0f">
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header id="site-header"></header>
+
+    <main id="main">
+        <div class="page-header">
+            <div class="page-title-group">
+                <h1 class="page-title">Merits &amp; Contribution Leaderboard</h1>
+                <span class="module-badge ">Live Tracking</span>
+            </div>
+            <p class="page-desc">Player merit totals, power levels, and weekly contribution velocity, read straight from <code>data/members.csv</code>.</p>
+        </div>
+        <noscript><div class="state-box"><strong>JavaScript is required</strong>This dashboard loads its data in the browser.</div></noscript>
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <span class="metric-label">Total Alliance Merits</span>
+                <span class="metric-value skeleton" id="mTotalValue">0000</span>
+                <span class="metric-subtext" id="mTotalSub">&nbsp;</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-label">Top Contributor</span>
+                <span class="metric-value skeleton" id="mTopValue">0000</span>
+                <span class="metric-subtext" id="mTopSub">&nbsp;</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-label">Avg Merits / Member</span>
+                <span class="metric-value skeleton" id="mAvgValue">0000</span>
+                <span class="metric-subtext" id="mAvgSub">&nbsp;</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-label">Roster Coverage</span>
+                <span class="metric-value skeleton" id="mRosterValue">0000</span>
+                <span class="metric-subtext" id="mRosterSub">&nbsp;</span>
+            </div>
+        </div>
+
+        <div id="issues"></div>
+
+        <div class="controls-card">
+            <div class="filter-group">
+                <div class="search-box">
+                    <svg viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <input type="search" id="memberSearch" placeholder="Search name or governor ID..." aria-label="Search by member name or governor ID">
+                </div>
+                <select id="roleFilter" class="select-input" aria-label="Filter by alliance role">
+                    <option value="ALL">All Roles</option>
+                    <option value="R5">Rank 5 (Leader)</option>
+                    <option value="R4">Rank 4 (Officers)</option>
+                    <option value="R3">Rank 3</option>
+                    <option value="R2">Rank 2</option>
+                    <option value="R1">Rank 1</option>
+                </select>
+                <select id="sortSelect" class="select-input" aria-label="Sort players">
+                    <option value="merits-desc">Merits: High to Low</option>
+                    <option value="merits-asc">Merits: Low to High</option>
+                    <option value="power-desc">Power: High to Low</option>
+                    <option value="weekly-desc">Weekly Gain: High to Low</option>
+                    <option value="name-asc">Name: A to Z</option>
+                </select>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;">
+                <span class="panel-note" id="syncNote" aria-live="polite"></span>
+                <button class="action-btn" id="syncBtn" type="button">
+                    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    <span>Reload data</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col" style="width:60px">Rank</th>
+                        <th scope="col">Member</th>
+                        <th scope="col">Role</th>
+                        <th scope="col">Power</th>
+                        <th scope="col">Total Merits</th>
+                        <th scope="col">Weekly Gain</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboardBody"><tr><td colspan="6" class="empty-row">Loading…</td></tr></tbody>
+            </table>
+            </div>
+        </div>
+    </main>
+
+    <footer id="site-footer"></footer>
+
+    <script type="module" src="../assets/js/merits.js"></script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Growth Analytics — NMC Alliance Hub</title>
+    <meta name="description" content="Weekly power and merit growth for No Mercy alliance members.">
+    <meta name="theme-color" content="#080a0f">
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header id="site-header"></header>
+
+    <main id="main">
+        <div class="page-header">
+            <div class="page-title-group">
+                <h1 class="page-title">Power &amp; Merit Growth Analytics</h1>
+                <span class="module-badge badge-emerald">Season Timeline</span>
+            </div>
+            <p class="page-desc">Weekly power and merit progression across the season, read from <code>data/growth.csv</code>.</p>
+        </div>
+        <noscript><div class="state-box"><strong>JavaScript is required</strong>This dashboard loads its data in the browser.</div></noscript>
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <span class="metric-label">Latest Power</span>
+                <span class="metric-value skeleton" id="gPowerValue">0000</span>
+                <span class="metric-subtext" id="gPowerSub">&nbsp;</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-label">Accumulated Merits</span>
+                <span class="metric-value skeleton" id="gMeritsValue">0000</span>
+                <span class="metric-subtext" id="gMeritsSub">&nbsp;</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-label">Avg Weekly Growth</span>
+                <span class="metric-value skeleton" id="gAvgValue">0000</span>
+                <span class="metric-subtext" id="gAvgSub">&nbsp;</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-label">Current Season Status</span>
+                <span class="metric-value skeleton" id="gPhaseValue">0000</span>
+                <span class="metric-subtext" id="gPhaseSub">&nbsp;</span>
+            </div>
+        </div>
+
+        <div id="issues"></div>
+
+        <div id="growthApp" hidden>
+            <div class="controls-card">
+                <div class="filter-group">
+                    <label for="memberSelect" class="filter-label">Member:</label>
+                    <select id="memberSelect" class="select-input"></select>
+
+                    <label for="viewMode" class="filter-label" style="margin-left:12px;">Display:</label>
+                    <select id="viewMode" class="select-input">
+                        <option value="BOTH">Dual Axis (Power &amp; Merits)</option>
+                        <option value="POWER">Power Progression Only</option>
+                        <option value="MERITS">Merit Velocity Only</option>
+                    </select>
+                </div>
+                <div class="legend-group">
+                    <div class="legend-item" id="legPower"><span class="legend-dot" style="background: var(--accent-cyan);"></span><span>Power (M)</span></div>
+                    <div class="legend-item" id="legMerits"><span class="legend-dot" style="background: var(--accent-gold);"></span><span>Merits (M)</span></div>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-scroll">
+                    <svg class="timeline-svg" id="timelineSvg" viewBox="0 0 1000 340" role="img" aria-label="Power and merit growth by week"></svg>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <div class="table-header"><span>Weekly Milestone Log</span><span class="panel-note" id="seasonName"></span></div>
+                <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">Timeline Week</th>
+                            <th scope="col">Kingdom Phase</th>
+                            <th scope="col">Power Score</th>
+                            <th scope="col">Merit Accumulation</th>
+                            <th scope="col">Power Δ</th>
+                            <th scope="col">Merit Δ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logTableBody"></tbody>
+                </table>
+                </div>
+            </div>
+        </div>
+        <div id="growthEmpty"></div>
+    </main>
+
+    <footer id="site-footer"></footer>
+
+    <script type="module" src="../assets/js/growth.js"></script>
+</body>
+</html>

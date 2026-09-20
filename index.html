@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NMC Alliance Hub — Kingdom 820</title>
+    <meta name="description" content="Alliance statistics, player performance metrics, and combat analytics for No Mercy (NMC), Kingdom 820.">
+    <meta name="theme-color" content="#080a0f">
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header id="site-header"></header>
+
+    <main id="main">
+        <section class="hero">
+            <div class="hero-top"><span class="kingdom-tag">Kingdom 820</span></div>
+            <h1>Tactical Intelligence Hub</h1>
+            <p>Alliance statistics, player performance metrics, and combat analytics for No Mercy.</p>
+        </section>
+
+        <noscript><div class="state-box"><strong>JavaScript is required</strong>This dashboard loads its data in the browser.</div></noscript>
+
+        <div class="metrics-grid" id="snapshot" aria-label="Alliance snapshot">
+            <div class="metric-card">
+                <span class="metric-label">Members Tracked</span>
+                <span class="metric-value skeleton" id="sMembersValue">0000</span>
+                <span class="metric-subtext" id="sMembersSub">&nbsp;</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-label">Total Merits</span>
+                <span class="metric-value skeleton" id="sMeritsValue">0000</span>
+                <span class="metric-subtext" id="sMeritsSub">&nbsp;</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-label">KPI Compliance</span>
+                <span class="metric-value skeleton" id="sKpiValue">0000</span>
+                <span class="metric-subtext" id="sKpiSub">&nbsp;</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-label">Wars Logged</span>
+                <span class="metric-value skeleton" id="sWarsValue">0000</span>
+                <span class="metric-subtext" id="sWarsSub">&nbsp;</span>
+            </div>
+        </div>
+
+        <div class="controls-bar">
+            <div class="search-container">
+                <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <input type="search" id="searchInput" placeholder="Search analytics modules..." aria-label="Search modules">
+            </div>
+            <div class="module-count" id="moduleCount" aria-live="polite">Showing 5 modules</div>
+        </div>
+
+        <div class="grid" id="cardsGrid">
+            <a href="merits/" class="card" data-keywords="merits contribution total rankings leaderboard">
+                <div>
+                    <div class="card-top">
+                        <div class="card-icon-wrapper"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg></div>
+                        <span class="status-pill pill-active">Live</span>
+                    </div>
+                    <div class="card-body">
+                        <h2>Contribution &amp; Merits</h2>
+                        <p>Track player merit rankings, total alliance contributions, and weekly gains.</p>
+                    </div>
+                </div>
+                <div class="card-footer"><span>View Rankings</span><svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></div>
+            </a>
+
+            <a href="kpi/" class="card" data-keywords="kpi members performance score target quota kill death ratio">
+                <div>
+                    <div class="card-top">
+                        <div class="card-icon-wrapper"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg></div>
+                        <span class="status-pill pill-active">Live</span>
+                    </div>
+                    <div class="card-body">
+                        <h2>Members KPI Scorecard</h2>
+                        <p>Evaluate each member against their merit quota and K/D target.</p>
+                    </div>
+                </div>
+                <div class="card-footer"><span>View Scorecards</span><svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></div>
+            </a>
+
+            <a href="spider/" class="card" data-keywords="spider chart radar comparison stats balance power">
+                <div>
+                    <div class="card-top">
+                        <div class="card-icon-wrapper"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg></div>
+                        <span class="status-pill pill-active">Visual</span>
+                    </div>
+                    <div class="card-body">
+                        <h2>Radar Stat Comparison</h2>
+                        <p>Multi-attribute radar comparing offense, survivability, rally leadership, and activity.</p>
+                    </div>
+                </div>
+                <div class="card-footer"><span>Open Radar</span><svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></div>
+            </a>
+
+            <a href="growth/" class="card" data-keywords="growth chart weekly timeline trends power progression">
+                <div>
+                    <div class="card-top">
+                        <div class="card-icon-wrapper"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></div>
+                        <span class="status-pill pill-active">Timeline</span>
+                    </div>
+                    <div class="card-body">
+                        <h2>Growth Analytics</h2>
+                        <p>Weekly progression curves tracking power gain and merit velocity across the season.</p>
+                    </div>
+                </div>
+                <div class="card-footer"><span>View Trends</span><svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></div>
+            </a>
+
+            <a href="war-pl/" class="card" data-keywords="war profit loss trade ratio efficiency casualties rally garrison">
+                <div>
+                    <div class="card-top">
+                        <div class="card-icon-wrapper"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
+                        <span class="status-pill pill-active">Analytics</span>
+                    </div>
+                    <div class="card-body">
+                        <h2>War Profit &amp; Loss</h2>
+                        <p>Resource and unit trade efficiency from kill-to-loss ratios across war campaigns.</p>
+                    </div>
+                </div>
+                <div class="card-footer"><span>Open Ledger</span><svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></div>
+            </a>
+
+            <p class="no-results" id="noResults" hidden>No modules match your search.</p>
+        </div>
+    </main>
+
+    <footer id="site-footer"></footer>
+
+    <script type="module" src="assets/js/home.js"></script>
+</body>
+</html>
