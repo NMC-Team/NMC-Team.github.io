@@ -1,21 +1,3 @@
 {
-  "demo": true,
-  "kpi": {
-    "exceedingPct": 120,
-    "metPct": 90,
-    "kdTarget": 2.5
-  },
-  "season": {
-    "name": "Season 1",
-    "weeks": [
-      { "label": "Week 1", "phase": "Zone 1 Spawn" },
-      { "label": "Week 2", "phase": "Pass 1 Open" },
-      { "label": "Week 3", "phase": "Zone 2 Expansion" },
-      { "label": "Week 4", "phase": "Pass 2 War" },
-      { "label": "Week 5", "phase": "Zone 3 Push" },
-      { "label": "Week 6", "phase": "Pass 3 Siege" },
-      { "label": "Week 7", "phase": "Dragon Lair" },
-      { "label": "Week 8", "phase": "King Crowned" }
-    ]
-  }
+  "members": []
 }
