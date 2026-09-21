@@ -1,0 +1,14 @@
+{
+  "demo": false,
+  "kingdom": 820,
+  "liveApi": true,
+  "kpi": {
+    "exceedingPct": 120,
+    "metPct": 90,
+    "kdTarget": 2.5
+  },
+  "season": {
+    "name": "Season",
+    "weeks": []
+  }
+}

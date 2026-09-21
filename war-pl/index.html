@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>War Profit & Loss — NMC Alliance Hub</title>
+    <meta name="description" content="War profit and loss ledger for the No Mercy alliance, Kingdom 820.">
+    <meta name="theme-color" content="#080a0f">
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header id="site-header"></header>
+
+    <main id="main">
+        <div class="page-header">
+            <div class="page-title-group">
+                <h1 class="page-title">War Profit &amp; Loss Ledger</h1>
+                <span class="module-badge badge-gold">Combat Economics</span>
+            </div>
+            <p class="page-desc">Kills, losses, resources spent, and healing speedups across each campaign engagement, read from <code>data/wars.csv</code>.</p>
+        </div>
+        <noscript><div class="state-box"><strong>JavaScript is required</strong>This dashboard loads its data in the browser.</div></noscript>
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <span class="metric-label">Total Enemy Severely Wounded</span>
+                <span class="metric-value skeleton" id="wKillsValue">0000</span>
+                <span class="metric-subtext" id="wKillsSub">&nbsp;</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-label">Alliance Troop Deaths</span>
+                <span class="metric-value skeleton" id="wDeathsValue">0000</span>
+                <span class="metric-subtext" id="wDeathsSub">&nbsp;</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-label">Resource Trade Ratio</span>
+                <span class="metric-value skeleton" id="wRatioValue">0000</span>
+                <span class="metric-subtext" id="wRatioSub">&nbsp;</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-label">Healing Speedups Consumed</span>
+                <span class="metric-value skeleton" id="wSpeedValue">0000</span>
+                <span class="metric-subtext" id="wSpeedSub">&nbsp;</span>
+            </div>
+        </div>
+
+        <div id="issues"></div>
+
+        <div class="controls-card">
+            <div class="filter-group">
+                <div class="search-box">
+                    <svg viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <input type="search" id="warSearch" placeholder="Search battle objective..." aria-label="Search battle objective">
+                </div>
+                <select id="typeFilter" class="select-input" aria-label="Filter engagement type">
+                    <option value="ALL">All Engagement Types</option>
+                    <option value="RALLY">Rally Attacking</option>
+                    <option value="GARRISON">Garrison Defense</option>
+                    <option value="FIELD">Open Field Push</option>
+                </select>
+                <select id="outcomeFilter" class="select-input" aria-label="Filter battle outcome">
+                    <option value="ALL">All Outcomes</option>
+                    <option value="VICTORY">Victory</option>
+                    <option value="DEFEAT">Defeat / Retreat</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">Battle Objective</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">Kills / Sev. Wounded</th>
+                        <th scope="col">Alliance Deaths</th>
+                        <th scope="col">RSS Spent</th>
+                        <th scope="col">Trade Ratio</th>
+                        <th scope="col">Outcome</th>
+                    </tr>
+                </thead>
+                <tbody id="warBody"><tr><td colspan="7" class="empty-row">Loading…</td></tr></tbody>
+            </table>
+            </div>
+        </div>
+    </main>
+
+    <footer id="site-footer"></footer>
+
+    <script type="module" src="../assets/js/war.js"></script>
+</body>
+</html>
