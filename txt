@@ -1,2 +1,0 @@
-# This file intentionally contains no sample records.
-# Add one JSON object per member to nmc-member.json.
